@@ -18,9 +18,19 @@ static void dead(const char *msg) {
     abort();
 }
 
+static void processing_confd(int connfd) {
+	char rbuf[64] = {};
+	ssize_t n = read(connfd, rbuf,sizeof(rbuf) - 1);
+	if(n < 0) {
+		printf("read() err.\n");
+		return;
+	}
 
-
-
+	printf("client says: %s\n", rbuf);
+	
+	char wbuf[] = "World";
+	write(connfd, wbuf, strlen(wbuf));
+}
 
 
 int main(int argc, char** argv) {
@@ -37,6 +47,21 @@ int main(int argc, char** argv) {
 	int rv = bind(fd, (const struct sockaddr *)&addr , sizeof(addr));
 	if(rv) {dead("bind()");}
 	
+	rv = listen(fd, SOMAXCONN);
+	if(rv) {
+		dead("listen()");
+	}
+
+	while(true) {
+		struct sockaddr_in client_addr = {};
+		socklen_t addrlen = sizeof(client_addr);
+		int connfd = accept(fd, (struct sockaddr *)&client_addr, &addrlen);
+		if(connfd < 0) {
+			continue;
+		}
+		
+		close(connfd);
+	}
 
 	
 }

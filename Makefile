@@ -1,7 +1,9 @@
-all: smalldis
+all: smalldis sdclient
 
-smalldis:
+smalldis: server.cpp
 	g++ server.cpp -o smalldis
+sdclient:
+	g++ client.cpp -o sdclient
 
 clean:
-	rm -f smalldis
+	rm -f smalldis sdclient
