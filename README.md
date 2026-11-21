@@ -5,6 +5,7 @@ while still providing features necessary for a redis package.
 
 
 
+
 ## Usage Instructions
 
 Simply clone the repository:
@@ -22,5 +23,4 @@ And run the binary:
 ```terminal
 ./smalldis
 ```
-
 
