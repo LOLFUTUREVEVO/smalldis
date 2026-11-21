@@ -21,7 +21,7 @@ static void dead(const char *msg) {
 
 int main(int argc, char** argv) {
 	
-	int fd = (AF_INET, SOCK_STREAM, 0);
+	int fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(fd < 0) {
 		dead("socket()");		
 	}
@@ -30,12 +30,13 @@ int main(int argc, char** argv) {
 	addr.sin_family = AF_INET;
 	addr.sin_port = ntohs(1234);
 	addr.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);
-
-	int rv = connect(fd, (const struct sockaddr*)&addr, sizeof(addr));
+	
+	printf("PRE CONNECT\n");
+	int rv = connect(fd, (const struct sockaddr *)&addr, sizeof(addr));
 	if(rv) {
 		dead("connect");
 	}
-
+	printf("PRE WRITE\n");
 	char msg[] = "Hello";
 	write(fd, msg, strlen(msg));
 

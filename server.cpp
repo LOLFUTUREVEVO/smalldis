@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 		if(connfd < 0) {
 			continue;
 		}
-		
+		processing_confd(connfd);	
 		close(connfd);
 	}
 

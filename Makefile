@@ -1,9 +1,9 @@
 all: smalldis sdclient
 
 smalldis: server.cpp
-	g++ server.cpp -o smalldis
-sdclient:
-	g++ client.cpp -o sdclient
+	g++ -Wall -Wextra -O2 -g server.cpp -o smalldis
+sdclient: client.cpp
+	g++ -Wall -Wextra -O2 -g client.cpp -o sdclient
 
 clean:
 	rm -f smalldis sdclient
