@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <iostream>
 #include <stdint.h>
 #include <stdlib.h>
@@ -10,7 +11,7 @@
 #include <netinet/ip.h>
 
 
-
+const size_t k_max_msg = 4096;
 
 static void dead(const char *msg) {
     int err = errno;
@@ -18,19 +19,66 @@ static void dead(const char *msg) {
     abort();
 }
 
-static void processing_confd(int connfd) {
-	char rbuf[64] = {};
-	ssize_t n = read(connfd, rbuf,sizeof(rbuf) - 1);
-	if(n < 0) {
-		printf("read() err.\n");
-		return;
+static int32_t read_full(int fd, char * buf, size_t n) {
+	while(n > 0) {
+		ssize_t rv = read(fd, buf, n);
+		if(rv <= 0) {
+			return -1;
+		}
+		assert((size_t)rv <= n);
+		n -= (size_t)rv;
+		buf += rv;
 	}
-
-	printf("client says: %s\n", rbuf);
-	
-	char wbuf[] = "World";
-	write(connfd, wbuf, strlen(wbuf));
+	return 0;
 }
+
+static int32_t write_all(int fd, char * buf, size_t n) {
+	while(n > 0) {
+		ssize_t rv = write(fd, buf ,n);
+		if(rv <= 0) {
+			return -1;
+		}
+		assert((size_t)rv <= n);
+		n -= (size_t)rv;
+		buf+= rv;
+	}
+	return 0;
+}
+
+
+
+static int32_t processing_confd(int connfd) {
+	char rbuf[4 + k_max_msg];
+	errno = 0;
+	int32_t err = read_full(connfd, rbuf, 4);
+
+	if(err) {
+		printf(errno == 0 ? "EOF" : "ERROR READING: [%d]");
+		return err;
+	}
+	uint32_t len = 0;
+	memcpy(&len, rbuf, 4);
+	if(len > k_max_msg) {
+		printf("Message Too Long\n");
+		return -1;
+	}
+	// Req body
+	err = read_full(connfd, &rbuf[4], len);
+	if(err){
+		printf("Read() Error");
+		return err;
+	}	
+	printf("Client Message: %.*s\n", len, &rbuf[4]);
+	const char reply[] = "World!";
+
+	char wbuf[4 + sizeof(reply)];
+	len = (uint32_t)strlen(reply);
+	memcpy(wbuf, &len, 4);
+	memcpy(&wbuf[4], reply, len);
+	return write_all(connfd, wbuf, 4 + len);
+
+}
+
 
 
 int main(int argc, char** argv) {
